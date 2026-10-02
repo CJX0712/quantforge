@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantforge"
+version = "0.1.0"
+description = "Post-training quantization research toolkit: RTN, AWQ and GPTQ-based weight compression"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Chenxing" }, { name = "晨星", email = "CJX0712@users.noreply.github.com" }]
+keywords = ["quantization", "ptq", "gptq", "awq", "llm", "compression"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6", "coverage>=7.4"]
+
+[project.scripts]
+quantforge = "quantforge.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/CJX0712/quantforge"
+Repository = "https://github.com/CJX0712/quantforge"
+Issues = "https://github.com/CJX0712/quantforge/issues"
+
+[tool.setuptools.packages.find]
+include = ["quantforge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501", "N803", "N806", "SIM108", "B905"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["N806", "B011"]
+
+[tool.coverage.run]
+source = ["quantforge"]
+branch = true
+omit = ["*/tests/*", "*/examples/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 75
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:", "raise NotImplementedError"]

@@ -1,0 +1,11 @@
+# Runtime dependencies
+#
+# QuantForge's quantizer core needs numpy only. scipy is optional and used, when
+# present, for faster linear algebra; sklearn is not required at runtime.
+numpy>=1.24
+
+# Development / CI extras (install with: pip install -e ".[dev]")
+# pytest>=8.0
+# pytest-cov>=5.0
+# ruff>=0.6
+# coverage>=7.4

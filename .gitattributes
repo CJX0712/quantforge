@@ -1,0 +1,9 @@
+# Normalise line endings in the repository; check out LF on every platform so the
+# Linux CI matrix and the Windows dev environment produce byte-identical files.
+* text=auto eol=lf
+
+# Keep these as-is
+*.png binary
+*.jpg binary
+*.ico binary
+*.whl binary
