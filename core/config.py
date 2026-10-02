@@ -21,18 +21,30 @@ ENV_PREFIX = "ENV_QF_"
 #: exactly the ratio ``mu/lam`` by construction: it does not depend on ``d_in`` nor on
 #: the Hessian's spectrum, which makes it the one damping quantity worth exposing.
 #:
-#: Chosen by measurement, not by derivation. Sweeping outlier gain from 1x to 500x spans
-#: Hessian spreads from 5 to 2766; the flagship's weight-NMSE edge over RTN is:
+#: Chosen by measurement, not by derivation. Sweeping outlier gain (1x-500x) against
+#: outlier fraction (0.04-0.25) over 24 regimes, the flagship's edge over RTN is:
 #:
-#:   SAFETY   1.5     2      3      5      20     100
-#:   spread~5  +13.7  +11.6  +9.3   +5.9   -1.0   -2.5
-#:   spread~116 +15.6 +13.3  +6.8   -6.3  -71.6  -214.5
-#:   spread~2766 +21.8 +21.4 +20.3  +17.5 -17.2  -173.8
+#:   SAFETY            3       10       20      100
+#:   ActErr  mean   +0.754   +0.683   +0.572   +0.008
+#:   ActErr  min    +0.639   +0.507   +0.164   -2.055
+#:   wNMSE   mean   +0.600   +0.512   +0.416   +0.011
+#:   wNMSE   min    -0.012   -0.204   -0.441   -1.453
 #:
-#: SAFETY <= 3 is positive in *every* conditioning regime; 20 collapses once the Hessian
-#: is ill-conditioned. 3.0 is the largest round value that keeps a margin, so
-#: ``percdamp = 1/3``. The identity ``mu/lam == SAFETY_TARGET`` is asserted in the test
-#: suite so a later edit cannot silently start controlling a different quantity.
+#: ``S = 3`` is positive in *every* regime on the ActErr axis that GPTQ actually
+#: optimises, and ``S = 100`` is the value that collapses. ``S = 20`` stays positive but
+#: degrades to +0.164 in the worst regime and is beaten by ``S = 3`` everywhere, so 3.0
+#: is the more robust choice. The identity ``mu/lam == SAFETY_TARGET`` is asserted in the
+#: test suite so a later edit cannot silently start controlling a different quantity.
+#:
+#: Reproduce with ``python _sweep_safety.py``.
+#:
+#: Note: an earlier revision justified this constant with a table indexed by "spread"
+#: values of 5 / 116 / 2766. Those came from ``diag(H).max() / diag(H).min()``, which is
+#: **unbounded** -- it measures one quiet channel, not the spectrum -- and yielded figures
+#: above ``d_in`` itself (114708 at ``d_in = 256``). The spectrum ratio
+#: ``lambda_max / mean(diag(H))`` is bounded by ``d_in`` and spans 15.3 to 82.5 here.
+#: The edges above are unaffected: the bad ratio was a display label only. The bound is
+#: now asserted in ``tests/test_quant.py``.
 SAFETY_TARGET = 3.0
 
 #: JSON-ish schema used by :meth:`RunConfig.validate`. Coercion is explicit.

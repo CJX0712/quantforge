@@ -52,14 +52,22 @@ leaves its scales far from optimal for the weight-domain error.
 
 - `SAFETY_TARGET = 3.0`: damping is `lam = mean(diag(H)) / SAFETY_TARGET`, so the safety
   ratio is exact by construction and independent of `d_in` and of the Hessian spectrum.
-  Chosen by sweeping outlier gain 1x-500x (spread 5-2766); `S <= 3` keeps the flagship's
-  edge over RTN positive in every regime, while `S = 20` collapses to -71.6% at
-  spread ~116.
+  Chosen by sweeping outlier gain 1x-500x over a 24-regime grid; `S <= 3` keeps the
+  flagship's edge over RTN positive in every regime (min +0.639), while `S = 100`
+  collapses (min -2.055).
+
+  *Correction:* an earlier revision of this note reported "spread 5-2766" and "S = 20
+  collapses to -71.6% at spread ~116". Those spread values came from an **unbounded**
+  `diag(H).max() / diag(H).min()` ratio, which measures a single quiet channel rather
+  than the spectrum and produced impossible figures (114708 at `d_in = 256`). The
+  correct spectrum measure `lambda_max / mean(diag(H))` is bounded above by `d_in`; on
+  this grid it spans **15.3 to 82.5**. The edge values above are unchanged, because the
+  ratio was only a display label and never entered the computation. See `BLOCKED.md`.
 
 ### Testing
 
-186 tests, 86.5% branch coverage, `ruff` clean. The suite is invariant-driven; the
-guards that caught real bugs during development:
+188 tests, 85.6% coverage (statement + branch), `ruff` clean. The suite is
+invariant-driven; the guards that caught real bugs during development:
 
 | invariant | catches |
 |---|---|

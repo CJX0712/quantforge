@@ -187,23 +187,41 @@ Three ways the gate could be met, none of which this report claims:
 
 ## 6. Failure cases
 
-### 6.1 Extreme activation outliers (gain 500×)
+### 6.1 Damping safety factor across the conditioning grid
 
-With `outlier_gain=500` the Hessian spread `mu/λ_min` reaches ≈ 2766. Measured flagship
-weight-NMSE edge over RTN as a function of the damping safety factor `S = mu/lam`:
+Sweeping outlier gain (1×–500×) against outlier fraction (0.04–0.25) over **24
+regimes**, measuring both error axes of the flagship against plain RTN. The
+conditioning measure is the spectrum ratio `spread = λ_max(H) / mean(diag(H))`, which
+is bounded above by `d_in` (since `λ_max ≤ trace`); it spans 15.3 to 82.5 here.
 
-| spread | S=1.5 | S=2 | S=3 | S=5 | S=20 | S=100 |
-|---|---|---|---|---|---|---|
-| ~5 | +13.7% | +11.6% | +9.3% | +5.9% | −1.0% | −2.5% |
-| ~116 | +15.6% | +13.3% | +6.8% | −6.3% | **−71.6%** | **−214.5%** |
-| ~2766 | +21.8% | +21.4% | +20.3% | +17.5% | −17.2% | −173.8% |
+| axis | S=3 | S=10 | S=20 | S=100 |
+|---|---|---|---|---|
+| ActErr edge, mean | **+0.754** | +0.683 | +0.572 | +0.008 |
+| ActErr edge, min | **+0.639** | +0.507 | +0.164 | **−2.055** |
+| weight-NMSE edge, mean | **+0.600** | +0.512 | +0.416 | +0.011 |
+| weight-NMSE edge, min | −0.012 | −0.204 | −0.441 | −1.453 |
+
+`S = 3` is positive in **all 24 regimes** on the ActErr axis that GPTQ actually
+optimises. `S = 20` remains positive but degrades to +0.164 in the worst regime and is
+beaten by `S = 3` in every regime. `S = 100` is the value that collapses. Reproduce
+with `python _sweep_safety.py`.
 
 **This is why the shipped default is `S = 3` and not 20.** Under-damping leaves
 `λ_min` near zero, `H⁻¹` explodes, and the compensation coefficients become noise —
-at `S=100` the flagship is *three orders of magnitude* worse than plain RTN. `S ≤ 3` is
-positive in every regime tested, which is also the cleanest evidence that this damping
-parameterisation is genuinely spectrum-independent: if it still depended on the spread,
-no single `S` could keep all three rows positive.
+at `S=100` the flagship is *worse than plain RTN* in the worst regime (ActErr edge
+−2.055). `S ≤ 3` is positive in every regime tested, which is also the cleanest evidence
+that this damping parameterisation is genuinely spectrum-independent: if it still
+depended on the spread, no single `S` could keep every row positive.
+
+*Correction.* This section previously indexed the sweep by "spread" values of 5 / 116 /
+2766 and reported `S = 20` collapsing to −71.6% at `spread ≈ 116`. Those spread values
+came from `diag(H).max() / diag(H).min()`, which is **unbounded** — it measures a single
+quiet channel, not the spectrum — and produced figures above `d_in` itself (114708 at
+`d_in = 256`). The correct spectrum ratio `λ_max / mean(diag(H))` is bounded by `d_in`
+and spans **15.3 to 82.5** on this grid. The edge values in the table are unchanged,
+because the bad ratio was only a display label and never entered the computation; what
+was wrong was the conditioning annotation, not the measurement. `tests/test_quant.py`
+now asserts the `spread ≤ d_in` bound so it cannot recur.
 
 ### 6.2 Pathological Hessian (rank-deficient)
 
