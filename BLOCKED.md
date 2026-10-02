@@ -2,10 +2,15 @@
 
 **Release**: v0.1.0 · **Date**: 2026-10-02 · **Overall quality grade: A-**
 
-**The primary acceptance criterion passes.** After moving the headline metric to the
-functional GPTQ actually minimises (activation output error), the flagship clears the
->=20% threshold with margin. The weight-domain threshold remains unmet and is reported
-here rather than worked around.
+**The DoD as specified is not met.** The criterion is a ≥20% reduction in weight-domain
+NMSE versus the strongest baseline; the measured value is **+5.23%**. On the
+output-domain axis the flagship clears the same threshold with margin (**+33.80%**).
+
+Whether to re-grade the criterion onto the axis the algorithm actually optimises is a
+specification decision that belongs to the team lead, so it has **not** been applied
+here: `gate.passed` is `False` and stays `False`. Per-axis results are reported
+separately (`nmse_passed`, `act_err_passed`, `primary_axis`) so the weight-domain
+outcome stays visible rather than being hidden behind an aggregate.
 
 ---
 
