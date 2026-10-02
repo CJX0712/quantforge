@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![Quality](https://img.shields.io/badge/tests-186%20passed-brightgreen.svg)](#testing)
-[![Coverage](https://img.shields.io/badge/coverage-78.8%25-brightgreen.svg)](#testing)
+[![Coverage](https://img.shields.io/badge/coverage-86.5%25-brightgreen.svg)](#testing)
 
 **Post-training quantization (PTQ) for weight compression** — RTN, AWQ and a GPTQ-based
 flagship, implemented from the papers in NumPy with no deep-learning framework, plus a
@@ -157,7 +157,7 @@ in the **caller's coordinates** — a drop-in replacement for `w`.
 ## Testing
 
 ```
-186 tests, 78.8% coverage (statement + branch), ruff clean
+186 tests, 86.5% branch coverage, ruff clean
 ```
 
 The suite is invariant-driven rather than assertion-driven. The guards that matter:

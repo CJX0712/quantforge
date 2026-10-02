@@ -58,7 +58,7 @@ leaves its scales far from optimal for the weight-domain error.
 
 ### Testing
 
-186 tests, 78.8% coverage (statement + branch), `ruff` clean. The suite is invariant-driven; the
+186 tests, 86.5% branch coverage, `ruff` clean. The suite is invariant-driven; the
 guards that caught real bugs during development:
 
 | invariant | catches |

@@ -125,23 +125,8 @@ def gate_report(summary: dict[str, dict[str, float]], threshold_pct: float = 20.
         out["nmse_vs_rtn_tensor_pct"] = 100.0 * (
             naive["nmse_mean"] - flags["nmse_mean"]
         ) / naive["nmse_mean"]
-
-    # Per-axis verdicts. `nmse_passed` is expected to be False for any GPTQ-style
-    # method: it optimises ||(W-W_hat)X||^2, not ||W-W_hat||^2/||W||^2. Recording it
-    # explicitly (rather than collapsing to one `passed` flag) keeps the weight-domain
-    # result visible instead of letting the aggregate hide it.
-    out["nmse_passed"] = bool(out["nmse_vs_baseline_pct"] >= threshold_pct)  # type: ignore[operator]
-    out["act_err_passed"] = bool(out["act_err_vs_baseline_pct"] >= threshold_pct)  # type: ignore[operator]
-    #: The headline metric is ActErr, the functional GPTQ actually minimises.
-    out["primary_axis"] = "act_err"
-    out["primary_axis_passed"] = out["act_err_passed"]
-    #: `passed` keeps its strict meaning: both axes clear the threshold.
-    out["passed"] = bool(out["nmse_passed"] and out["act_err_passed"])
-    #: `primary_axis_passed` is the acceptance verdict used for the release gate.
-    out["note"] = (
-        "GPTQ minimises ||(W-W_hat)X||^2 (output domain) while nmse is "
-        "||W-W_hat||^2/||W||^2 (weight domain); the two provably diverge, so "
-        "nmse_passed is expected to be False and is reported, not hidden."
+    out["passed"] = bool(
+        out["nmse_vs_baseline_pct"] >= threshold_pct and out["act_err_vs_baseline_pct"] >= threshold_pct
     )
     return out
 
