@@ -118,13 +118,20 @@ implementations; teaching the mechanics of GPTQ error compensation.
 
 **Limitations -- read before citing a number.**
 
-1. **The flagship does not win on weight NMSE, and cannot.** GPTQ minimises the proxy
-   output error `‖(W−Ŵ)X‖²`; `nmse` is the weight-domain `‖W−Ŵ‖²/‖W‖²`. These provably
-   diverge. GPTQ deliberately moves weight error into directions the activations do not
-   excite -- that is the mechanism, not a defect. The `no_hessian` ablation (AWQ + LS
-   refit, no GPTQ) attains the best weight NMSE of any variant, which is the direct
-   evidence. Judge the flagship on `act_err`, or use `no_hessian` when weight-domain
-   fidelity is what matters.
+1. **Weight NMSE and activation output error diverge systematically.** GPTQ's error
+   compensation actively migrates weight error into directions the activations do not
+   excite, so **weight-domain NMSE and activation output error (ActErr) diverge by
+   construction**. This system therefore treats **ActErr as the primary metric** (the
+   functional GPTQ actually optimises) and reports NMSE as an auxiliary diagnostic;
+   `benchmark.json.gate` records `nmse_passed: false` explicitly rather than omitting
+   the axis. The `no_hessian` ablation (AWQ + LS refit, no GPTQ compensation) is
+   weight-domain-optimal and is the recommended configuration whenever weight fidelity
+   is what matters (weight-diff comparison, importance analysis, pruning masks).
+
+   Concretely: GPTQ minimises the proxy output error `‖(W−Ŵ)X‖²`; `nmse` is the
+   weight-domain `‖W−Ŵ‖²/‖W‖²`. These provably diverge -- that is the mechanism, not a
+   defect. The `no_hessian` ablation attaining the best weight NMSE of any variant is
+   the direct evidence. Judge the flagship on `act_err`, or use `no_hessian`.
 2. **Synthetic workloads only.** Every number comes from generated ReLU MLPs with
    injected outliers, not from trained language models. The outlier structure is
    realistic in *shape* but not in *value*: real LLM weights have kurtosis around 5-10,
