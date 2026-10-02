@@ -84,7 +84,7 @@ team lead's call. The code supports all three without modification.
 | Item | Required | Measured | Status |
 |---|---|---|---|
 | Unit tests | ≥ 25, all green | **186 passed**, 0 failed | ✅ |
-| Coverage | ≥ 75% | **86.5%** (branch coverage) | ✅ |
+| Coverage | ≥ 75% | **85.6%** (statement + branch) | ✅ |
 | Lint | `ruff check` clean | **All checks passed** | ✅ |
 | Determinism | `benchmark.json` bit-identical across runs | records **True**, full report **True** | ✅ |
 | Performance budget | demo ≤ 60 s, ≤ 2 GB | **7.9 s**, < 100 MB peak | ✅ |
@@ -109,16 +109,30 @@ team lead's call. The code supports all three without modification.
 3. **MSE-optimal clipping, not GPTQ, is the largest single contributor** (+130% NMSE when
    removed). On heavy-tailed weights the clip search matters more than the second-order
    compensation.
-4. **Damping safety factor is 3.0, not the 20 originally proposed.** At `S = 20` the
-   flagship is −71.6% versus RTN once the Hessian spread reaches ~116, because
-   under-damping leaves `λ_min` near zero. Sweep table in §6.1 of the benchmark report.
+4. **Damping safety factor is 3.0, and 20.0 is not measurably better.** Swept over a
+   gain × fraction grid (24 regimes) on both error axes. With S = 3 the ActErr edge is
+   positive in **all 24** regimes (min **+0.639**); with S = 20 it falls to **+0.164**
+   in the worst regime and is beaten by S = 3 in every regime tested. S = 100 is the
+   value that actually breaks (ActErr min **−2.055**). Both S = 3 and S = 20 therefore
+   sit in the safe region, and 3.0 is kept because it is the more robust of the two.
+   Reproduce with `python _sweep_safety.py`.
+
+   *Correction:* an earlier revision of this file justified the choice with a
+   "Hessian spread reaches ~116" figure. That number came from
+   `diag(H).max() / diag(H).min()`, which is **unbounded** and is not a spectrum
+   ratio — it produced impossible values such as 114708 at `d_in = 256`. The correct
+   measure is `λ_max / mean(diag(H))`, bounded above by `d_in`; re-measured, the grid
+   spans **15.3 to 82.5**, comfortably inside the bound. The ActErr/wNMSE edges above
+   are unchanged (the ratio was a display label and never entered the computation);
+   only the conditioning annotation was wrong. The sweep now asserts
+   `spread ≤ d_in` on every row.
 
 ---
 
 ## Verification commands
 
 ```bash
-python -m pytest tests -q --cov=quantforge          # 186 passed, 86.5%
+python -m pytest tests -q --cov=quantforge          # 186 passed, 85.6%
 python -m ruff check .                              # All checks passed
 python -m quantforge demo --outdir results \
     --n-calib 512 --bits-grid 2,3,4,8 --group-grid 128,64

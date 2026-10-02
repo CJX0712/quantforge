@@ -449,3 +449,33 @@ def test_gptq_requantization_is_idempotent(calibration: np.ndarray, gaussian_wei
     w_hat = np.asarray(first["w_hat"])
     second = gptq_quantize(w_hat, calibration, cfg)
     assert np.allclose(np.asarray(second["w_hat"]), w_hat, atol=1e-9)
+
+
+def test_hessian_spectrum_ratio_is_bounded_by_d_in(calibration: np.ndarray) -> None:
+    """``lam_max(H)/mean(diag(H)) <= d_in`` always, by ``lam_max <= trace``.
+
+    Regression guard. An earlier conditioning diagnostic used
+    ``diag(H).max()/diag(H).min()``, which is *unbounded* -- it measures a single
+    quiet channel, not the spectrum -- and reported impossible values (114708 at
+    ``d_in=256``). Any spread-like quantity used in a conclusion must respect this
+    bound.
+    """
+    x = calibration * 40.0  # provoke a wide spread without leaving the bound
+    h = build_hessian(x)
+    d_in = h.shape[0]
+    spread = float(np.linalg.eigvalsh(h).max() / np.mean(np.diag(h)))
+    assert spread <= d_in + 1e-9, f"spread {spread} exceeds the d_in={d_in} bound"
+
+
+def test_hessian_spread_grows_with_activations(calibration: np.ndarray) -> None:
+    """The spectrum ratio must actually respond to conditioning, not stay constant."""
+    narrow = float(
+        np.linalg.eigvalsh(build_hessian(calibration)).max() / np.mean(np.diag(build_hessian(calibration)))
+    )
+    spiked = calibration.copy()
+    spiked[0] *= 100.0
+    wide = float(
+        np.linalg.eigvalsh(build_hessian(spiked)).max() / np.mean(np.diag(build_hessian(spiked)))
+    )
+    assert wide > narrow
+    assert wide <= spiked.shape[0] + 1e-9
